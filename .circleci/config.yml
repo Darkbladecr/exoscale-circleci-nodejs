@@ -11,8 +11,8 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - run: docker build -t $DOCKER_IMAGE:latest .
-      - run: docker run -d --rm --name node_app $DOCKER_IMAGE:latest
+      - run: docker build -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest .
+      - run: docker run -d --rm --name node_app docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest
       - run: docker exec -it node_app node test.js
       - run: docker stop node_app
 
@@ -20,41 +20,45 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - run: docker build --build-arg APP_VERSION=$CIRCLE_SHA1 -t $DOCKER_IMAGE:$CIRCLE_SHA1 .
+      - run: docker build --build-arg APP_VERSION=$CIRCLE_SHA1 -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1 .
       - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
-      - run: docker push $DOCKER_IMAGE:$CIRCLE_SHA1
+      - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1
 
-  deploy:
-    <<: *defaults
-    steps:
-      - checkout
-      - run: echo $ID_RSA | base64 -d > id_rsa && chmod 400 id_rsa
-      - run: ssh -i id_rsa core@$VM_IP "IMAGE=$DOCKER_IMAGE:$CIRCLE_SHA1 bash -s" < deploy.sh
+  # deploy:
+  #   <<: *defaults
+  #   steps:
+  #     - checkout
+  #     - run: echo $ID_RSA | base64 -d > id_rsa && chmod 400 id_rsa
+  #     - run: ssh -i id_rsa core@$VM_IP "IMAGE=docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1 bash -s" < deploy.sh
 
-  smoke-test:
-    <<: *defaults
-    steps:
-      - run: |
-          docker run -it \
-                     -e APP_HOST=$VM_IP \
-                     -e APP_VERSION=$CIRCLE_SHA1 \
-                     $DOCKER_IMAGE:$CIRCLE_SHA1 \
-                     node test.js
+  # smoke-test:
+  #   <<: *defaults
+  #   steps:
+  #     - run: |
+  #         docker run -it \
+  #                    -e APP_HOST=$VM_IP \
+  #                    -e APP_VERSION=$CIRCLE_SHA1 \
+  #                    $DOCKER_IMAGE:$CIRCLE_SHA1 \
+  #                    node test.js
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - test
+      - test:
+          context: Quesmed
       - publish:
           requires:
             - test
+          context: Quesmed
           filters:
             branches:
               only: master
       - deploy:
           requires:
             - publish
+          context: Quesmed
       - smoke-test:
           requires:
             - deploy
+          context: Quesmed
