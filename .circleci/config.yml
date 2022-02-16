@@ -3,7 +3,7 @@ version: 2
 jobs:
   build:
     docker:
-      - image: alpine
+      - image: docker:20.10.12-alpine3.15
     working_directory: /mnt/ramdisk
 
     steps:
