@@ -1,6 +1,6 @@
 {
   "name": "exoscale-circleci-nodejs",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A minimal NodeJS server with no external dependencies. It runs in a container on port 3000 and it responds with `Version: $APP_VERSION` when called. Port 80 is forwarded from the host to port 3000 on the container.",
   "main": "server.js",
   "scripts": {
