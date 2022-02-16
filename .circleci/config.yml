@@ -21,7 +21,7 @@ jobs:
     steps:
       - checkout
       - run: docker build --build-arg APP_VERSION=$CIRCLE_SHA1 -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1 .
-      - run: docker login -u $DOCKER_USER -p $DOCKER_PASS
+      - run: echo "$DOCKER_PASS" | docker login -u $DOCKER_USER --password-stdin
       - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1
 
   # deploy:
