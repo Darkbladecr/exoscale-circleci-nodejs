@@ -1,65 +1,31 @@
 version: 2
 
-defaults: &defaults
-  machine:
-    docker_layer_caching: true
-
 jobs:
-  # test:
-  #   <<: *defaults
-  #   steps:
-  #     - checkout
-  #     - run: docker build -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest .
-  #     - run: docker run -d --rm --name node_app docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest
-  #     - run: docker exec -it node_app node test.js
-  #     - run: docker stop node_app
+  build:
+    docker:
+      - image: alpine
+    working_directory: /mnt/ramdisk
 
-  publish:
-    <<: *defaults
     steps:
       - checkout
-      - run: 'echo ''export VER=$(echo $(cat ./package.json | grep version | head -1 | awk -F: ''''{ print $2 }'''' | sed ''''s/[",]//g'''' | tr -d ''''[[:space:]]''''))'' >> $BASH_ENV'
-      - run: docker build --build-arg APP_VERSION=$VER -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER .
-      - run: echo "$DOCKER_PASS" | docker login docker.mitrasinovic.co.uk -u $DOCKER_USER --password-stdin
-      - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER
-
-  # deploy:
-  #   <<: *defaults
-  #   steps:
-  #     - checkout
-  #     - run: echo $ID_RSA | base64 -d > id_rsa && chmod 400 id_rsa
-  #     - run: ssh -i id_rsa core@$VM_IP "IMAGE=docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER bash -s" < deploy.sh
-
-  # smoke-test:
-  #   <<: *defaults
-  #   steps:
-  #     - run: |
-  #         docker run -it \
-  #                    -e APP_HOST=$VM_IP \
-  #                    -e APP_VERSION=$VER \
-  #                    $DOCKER_IMAGE:$VER \
-  #                    node test.js
+      - setup_remote_docker:
+          docker_layer_caching: true
+      - run:
+          name: Build and push Docker image
+          command: |
+            echo ''export VER=$(echo $(cat ./package.json | grep version | head -1 | awk -F: ''''{ print $2 }'''' | sed ''''s/[",]//g'''' | tr -d ''''[[:space:]]''''))'' >> $BASH_ENV
+            docker build --build-arg APP_VERSION=$VER -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER .
+            echo "$DOCKER_PASS" | docker login docker.mitrasinovic.co.uk -u $DOCKER_USER --password-stdin
+            docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      # - test:
-      #     context: Quesmed
-      - publish:
-          # requires:
-          #   - test
+      - build:
           context: Quesmed
           filters:
             branches:
               only: master
             tags:
               only: /^v[0-9]+(\.[0-9]+)*$/
-      # - deploy:
-      #     requires:
-      #       - publish
-      #     context: Quesmed
-      # - smoke-test:
-      #     requires:
-      #       - deploy
-      #     context: Quesmed
