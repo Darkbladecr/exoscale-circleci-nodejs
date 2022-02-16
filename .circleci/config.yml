@@ -2,9 +2,9 @@ version: 2
 
 jobs:
   build:
-    docker:
-      - image: docker:20.10.12-alpine3.15
-    working_directory: /mnt/ramdisk
+    machine:
+      image: ubuntu-2004:202101-01
+    resource_class: arm.medium
 
     steps:
       - checkout
