@@ -54,11 +54,11 @@ workflows:
           filters:
             branches:
               only: master
-      - deploy:
-          requires:
-            - publish
-          context: Quesmed
-      - smoke-test:
-          requires:
-            - deploy
-          context: Quesmed
+      # - deploy:
+      #     requires:
+      #       - publish
+      #     context: Quesmed
+      # - smoke-test:
+      #     requires:
+      #       - deploy
+      #     context: Quesmed
