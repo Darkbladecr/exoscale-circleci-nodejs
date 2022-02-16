@@ -18,7 +18,7 @@ jobs:
     <<: *defaults
     steps:
       - checkout
-      - run: 'VER=$(echo $(cat ./package.json | grep version | head -1 | awk -F: ''{ print $2 }'' | sed ''s/[",]//g'' | tr -d ''[[:space:]]''))'
+      - run: 'echo ''export VER=$(echo $(cat ./package.json | grep version | head -1 | awk -F: ''''{ print $2 }'''' | sed ''''s/[",]//g'''' | tr -d ''''[[:space:]]''''))'' >> $BASH_ENV'
       - run: docker build --build-arg APP_VERSION=$VER -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER .
       - run: echo "$DOCKER_PASS" | docker login docker.mitrasinovic.co.uk -u $DOCKER_USER --password-stdin
       - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER
