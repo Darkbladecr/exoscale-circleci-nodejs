@@ -1,0 +1,21 @@
+{
+  "name": "exoscale-circleci-nodejs",
+  "version": "1.0.0",
+  "description": "A minimal NodeJS server with no external dependencies. It runs in a container on port 3000 and it responds with `Version: $APP_VERSION` when called. Port 80 is forwarded from the host to port 3000 on the container.",
+  "main": "server.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "start": "node server.js",
+    "postversion": "git push && git push --tags"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/Darkbladecr/exoscale-circleci-nodejs.git"
+  },
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/Darkbladecr/exoscale-circleci-nodejs/issues"
+  },
+  "homepage": "https://github.com/Darkbladecr/exoscale-circleci-nodejs#readme"
+}

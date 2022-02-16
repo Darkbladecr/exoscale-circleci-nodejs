@@ -3,33 +3,32 @@ version: 2
 defaults: &defaults
   machine:
     docker_layer_caching: true
-  environment:
-    - APP_VERSION: $CIRCLE_SHA1
 
 jobs:
-  test:
-    <<: *defaults
-    steps:
-      - checkout
-      - run: docker build -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest .
-      - run: docker run -d --rm --name node_app docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest
-      - run: docker exec -it node_app node test.js
-      - run: docker stop node_app
+  # test:
+  #   <<: *defaults
+  #   steps:
+  #     - checkout
+  #     - run: docker build -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest .
+  #     - run: docker run -d --rm --name node_app docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:latest
+  #     - run: docker exec -it node_app node test.js
+  #     - run: docker stop node_app
 
   publish:
     <<: *defaults
     steps:
       - checkout
-      - run: docker build --build-arg APP_VERSION=$CIRCLE_SHA1 -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1 .
+      - run: 'VER=$(echo $(cat ./package.json | grep version | head -1 | awk -F: ''{ print $2 }'' | sed ''s/[",]//g'' | tr -d ''[[:space:]]''))'
+      - run: docker build --build-arg APP_VERSION=$VER -t docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER .
       - run: echo "$DOCKER_PASS" | docker login docker.mitrasinovic.co.uk -u $DOCKER_USER --password-stdin
-      - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1
+      - run: docker push docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER
 
   # deploy:
   #   <<: *defaults
   #   steps:
   #     - checkout
   #     - run: echo $ID_RSA | base64 -d > id_rsa && chmod 400 id_rsa
-  #     - run: ssh -i id_rsa core@$VM_IP "IMAGE=docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$CIRCLE_SHA1 bash -s" < deploy.sh
+  #     - run: ssh -i id_rsa core@$VM_IP "IMAGE=docker.mitrasinovic.co.uk/exoscale-circleci-nodejs:$VER bash -s" < deploy.sh
 
   # smoke-test:
   #   <<: *defaults
@@ -37,23 +36,25 @@ jobs:
   #     - run: |
   #         docker run -it \
   #                    -e APP_HOST=$VM_IP \
-  #                    -e APP_VERSION=$CIRCLE_SHA1 \
-  #                    $DOCKER_IMAGE:$CIRCLE_SHA1 \
+  #                    -e APP_VERSION=$VER \
+  #                    $DOCKER_IMAGE:$VER \
   #                    node test.js
 
 workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - test:
-          context: Quesmed
+      # - test:
+      #     context: Quesmed
       - publish:
-          requires:
-            - test
+          # requires:
+          #   - test
           context: Quesmed
           filters:
             branches:
               only: master
+            tags:
+              only: /^v[0-9]+(\.[0-9]+)*$/
       # - deploy:
       #     requires:
       #       - publish
