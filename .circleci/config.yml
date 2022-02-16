@@ -45,20 +45,16 @@ workflows:
   version: 2
   build-and-deploy:
     jobs:
-      - test:
-          context: exoscale
+      - test
       - publish:
           requires:
             - test
-          context: exoscale
           filters:
             branches:
               only: master
       - deploy:
           requires:
             - publish
-          context: exoscale
       - smoke-test:
           requires:
             - deploy
-          context: exoscale
